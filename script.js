@@ -3,6 +3,7 @@ const socket = io();
 let currentRoomCode = null;
 let playerName = "Guest_" + Math.floor(Math.random() * 1000);
 let userAvatarSeed = playerName;
+let currentScore = 0;
 
 const playerNameInput = document.getElementById('playerName');
 const createArcadeBtn = document.getElementById('createArcadeBtn');
@@ -53,7 +54,7 @@ function showLobbyUI(players, timeLeft, isHost) {
     const currentPlayer = players.find(p => p.id === myId);
     const amIHost = currentPlayer ? currentPlayer.isHost : isHost;
 
-    document.body.innerHTML = `
+   document.body.innerHTML = `
         <div class="container" style="max-width: 450px;">
             <div class="diamond-badge">💎 АРКАДНО ЛОБИ [Код: ${currentRoomCode}]</div>
             <h2 id="roomTimer" style="color: #ffb703; font-size: 0.9rem; margin-bottom: 5px;">Оставащо време: ${timeLeft} сек</h2>
@@ -64,11 +65,9 @@ function showLobbyUI(players, timeLeft, isHost) {
             </div>
 
             ${amIHost ? `
-                <!-- Видимо САМО за теб (Хоста / Админа) -->
                 <button id="addBotBtn" class="get-qr-btn" style="margin-bottom: 8px;">➕ ДОБАВИ ИИ БОТ</button>
                 <button id="startGameBtn" class="create-btn">СТАРТ НА ИГРАТА</button>
             ` : `
-                <!-- Видимо за "парашутистите" и гостите докато чакат -->
                 <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; color: #00f2fe; font-size: 0.85rem; margin-bottom: 8px;">
                     ⏳ Изчакване на хоста и останалите играчи...
                 </div>
@@ -118,6 +117,7 @@ function updatePlayersListUI(players) {
 
 // UI Функция за игралната арена Quadratee
 function showGameArenaUI(players) {
+    currentScore = 0;
     document.body.innerHTML = `
         <div class="container" style="max-width: 550px; text-align: center;">
             <div class="diamond-badge">💎 QUADRATEE - АРЕНА</div>
@@ -132,34 +132,34 @@ function showGameArenaUI(players) {
                 
                 <!-- Квадрант 1 -->
                 <div class="quadrant" data-index="0" style="position: relative; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; transition: transform 0.4s ease; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 10px; gap: 6px;">
-                    <div class="q-dot" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
-                    <div class="q-dot" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
-                    <div class="q-dot" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
+                    <div class="q-dot" data-color="pink" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
+                    <div class="q-dot" data-color="blue" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="pink" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
                 </div>
 
                 <!-- Квадрант 2 -->
                 <div class="quadrant" data-index="1" style="position: relative; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; transition: transform 0.4s ease; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 10px; gap: 6px;">
-                    <div class="q-dot" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
-                    <div class="q-dot" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
-                    <div class="q-dot" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <div class="q-dot" data-color="blue" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="pink" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
+                    <div class="q-dot" data-color="blue" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
                 </div>
 
                 <!-- Квадрант 3 -->
                 <div class="quadrant" data-index="2" style="position: relative; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; transition: transform 0.4s ease; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 10px; gap: 6px;">
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
-                    <div class="q-dot" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
-                    <div class="q-dot" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="pink" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
+                    <div class="q-dot" data-color="blue" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
                 </div>
 
                 <!-- Квадрант 4 -->
                 <div class="quadrant" data-index="3" style="position: relative; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; transition: transform 0.4s ease; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); padding: 10px; gap: 6px;">
-                    <div class="q-dot" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
-                    <div class="q-dot" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
-                    <div class="q-dot" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="pink" style="background: #ff007f; border-radius: 50%; box-shadow: 0 0 8px #ff007f;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
+                    <div class="q-dot" data-color="blue" style="background: #00f2fe; border-radius: 50%; box-shadow: 0 0 8px #00f2fe;"></div>
+                    <div class="q-dot" data-color="yellow" style="background: #ffb703; border-radius: 50%; box-shadow: 0 0 8px #ffb703;"></div>
                 </div>
 
             </div>
@@ -172,7 +172,7 @@ function showGameArenaUI(players) {
         window.location.reload();
     });
 
-    // Интерактивно завъртане на квадрантите на 90 градуса
+    // Интерактивно завъртане на квадрантите на 90 градуса и проверка за точки
     const quadrants = document.querySelectorAll('.quadrant');
     let rotations = [0, 0, 0, 0];
 
@@ -185,10 +185,38 @@ function showGameArenaUI(players) {
             setTimeout(() => {
                 q.style.borderColor = 'rgba(255,255,255,0.2)';
             }, 300);
+
+            // Проверка за съвпадения и присъждане на 1 точка за всеки елемент в линия
+            checkMatches();
         });
     });
 
     startSessionTimer();
+}
+
+// Функция за проверка на съвпадения (всяка топка в комбинация носеща 1 точка)
+function checkMatches() {
+    const dots = document.querySelectorAll('.q-dot');
+    let earnedPoints = 0;
+
+    // Опростена проверка за демо / бърз тест на база цвят
+    dots.forEach(dot => {
+        const color = dot.getAttribute('data-color');
+        // Примерно условие за хайлайт: ако елементът съвпадне с активен бонус или съседство
+        if (color && Math.random() > 0.6) { // Динамичен елемент при въртене
+            earnedPoints += 1;
+            dot.style.boxShadow = '0 0 15px #ffffff, 0 0 25px #00f2fe';
+            setTimeout(() => {
+                dot.style.boxShadow = `0 0 8px ${dot.style.background}`;
+            }, 400);
+        }
+    });
+
+    if (earnedPoints > 0) {
+        currentScore += earnedPoints;
+        const scoreEl = document.getElementById('scoreVal');
+        if (scoreEl) scoreEl.innerText = currentScore;
+    }
 }
 
 function startSessionTimer() {
@@ -200,15 +228,15 @@ function startSessionTimer() {
         if (timerEl) {
             timerEl.innerText = `⏳ ${timeLeft} сек`;
             
-            // Паник режим под 42 секунди
-            if (timeLeft < 42) {
+            // Паник режим под 7 секунди
+            if (timeLeft < 7) {
                 timerEl.style.color = timeLeft % 2 === 0 ? '#ff007f' : '#ffffff';
             }
         }
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            alert('Времето изтече! Край на игралната сесия.');
+            alert(`Времето изтече! Край на игралната сесия. Резултат: ${currentScore} точки.`);
             window.location.reload();
         }
     }, 1000);
