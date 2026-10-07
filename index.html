@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Game Center - Quadratee</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- QRCode библиотека -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Socket.io клиент -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <!-- Бутони за профил и настройки в горните ъгли -->
+    <div class="profile-btn" id="profileBtn" title="QR Код / Профил">
+        <img id="userAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=guest" alt="Avatar">
+    </div>
+    
+    <button class="settings-btn" id="settingsBtn" title="Настройки">⚙️</button>
+
+    <div class="container">
+        <div class="diamond-badge">💎 QUADRATEE ARCADE</div>
+        
+        <h2 id="txtGetMore">Вземи повече чрез</h2>
+
+        <div class="input-group">
+            <input type="text" id="playerName" placeholder="Твоето име..." autocomplete="off">
+        </div>
+
+        <button id="joinArcadeBtn" class="create-btn">ВХОД В АРКАДА</button>
+        
+        <div class="or-divider" id="txtOr">или</div>
+
+        <button id="createArcadeBtn">СЪЗДАЙ АРКАДА</button>
+
+        <button id="getQrBtn" class="get-qr-btn" style="margin-top: 10px;">QR SCANNEN</button>
+        <input type="file" id="qrCameraInput" accept="image/*" capture="environment" style="display: none;">
+
+        <!-- Секретни полета за код 1001 -->
+        <div style="margin-top: 15px;">
+            <p style="color: #a0aec0; font-size: 0.8rem; margin-bottom: 8px;">Въведи код за достъп (1001):</p>
+            <div class="code-inputs">
+                <input type="text" maxlength="1" class="code-digit">
+                <input type="text" maxlength="1" class="code-digit">
+                <input type="text" maxlength="1" class="code-digit">
+                <input type="text" maxlength="1" class="code-digit">
+            </div>
+        </div>
+    </div>
+
+    <!-- Модален прозорец за QR код / Профил -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-content" id="profileModalContent">
+            <!-- Динамично съдържание -->
+        </div>
+    </div>
+
+    <!-- Модален прозорец за езици -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="txtModalTitle">Избери език</h3>
+            <div class="lang-options">
+                <button class="lang-btn" data-lang="bg">🇧🇬 Български</button>
+                <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+                <button class="lang-btn" data-lang="de">🇩🇪 Deutsch</button>
+                <button class="lang-btn" data-lang="fr">🇫🇷 Français</button>
+                <button class="lang-btn" data-lang="it">🇮🇹 Italiano</button>
+            </div>
+            <button id="closeModalBtn" class="close-modal">Затвори</button>
+        </div>
+    </div>
+
+    <div class="bottom-branding">
+        <span>POWERED BY SOCKET.IO & NODE.JS</span>
+    </div>
+
+    <!-- Логика и Свързване -->
+    <script src="script.js"></script>
+    <script>
+        const socket = io();
+        socket.on('connect', () => {
+            console.log('Свързан със сървъра с ID:', socket.id);
+        });
+    </script>
+</body>
+</html>
