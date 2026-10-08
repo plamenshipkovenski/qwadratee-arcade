@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratee - Арена / Лобѝ</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dir-btn, .settings-gear-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+
+        .dir-btn.active-green {
+            background-color: #10b981;
+            border-color: #059669;
+            color: #ffffff;
+        }
+
+        .dir-btn.inactive-gray {
+            background-color: #334155;
+            color: #94a3b8;
+        }
+
+        .shiny-green {
+            border: 2px solid #34d399 !important;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.7), inset 0 0 6px rgba(52, 211, 153, 0.5);
+        }
+
+        .settings-gear-btn {
+            color: #38bdf8;
+        }
+        .settings-gear-btn:hover {
+            background: #334155;
+            color: #ffffff;
+            transform: rotate(45deg);
+        }
+
+        /* Преглед/Хинт квадрант за лобито */
+        .preview-wrapper {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hint-title {
+            font-size: 13px;
+            color: #38bdf8;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quadrant-preview-box {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 12px;
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s;
+        }
+
+        .quadrant-preview-box:hover {
+            border-color: #38bdf8;
+        }
+
+        .circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease;
+        }
+
+        .circle.pink { background-color: #ec4899; }
+        .circle.cyan { background-color: #06b6d4; }
+        .circle.yellow { background-color: #eab308; }
+
+        .start-game-btn {
+            display: block;
+            width: 100%;
+            background: #10b981;
+            color: #ffffff;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            border: none;
+            text-align: center;
+            cursor: pointer;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            font-size: 15px;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+
+        .start-game-btn:hover {
+            background: #059669;
+        }
+
+        .back-btn-link {
+            display: block;
+            width: 100%;
+            background: #334155;
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .back-btn-link:hover {
+            background: #475569;
+            color: #ffffff;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1e293b; padding: 25px; border-radius: 16px;
+            text-align: center; color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 320px; width: 100%; border: 1px solid #334155;
+        }
+
+        .modal-content h3 { margin-bottom: 15px; color: #38bdf8; font-size: 16px; }
+
+        #close-qr {
+            float: right; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 15px;
+        }
+        #close-qr:hover { color: #ffffff; }
+
+        .player-profile-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #0f172a; border: 1px solid #334155; padding: 12px 16px;
+            border-radius: 12px; margin-bottom: 15px;
+        }
+
+        .player-avatar {
+            font-size: 22px; background: #1e293b; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: 1px solid #334155; cursor: pointer;
+        }
+
+        .player-name-info { font-weight: bold; color: #f8fafc; font-size: 15px; }
+        .player-score-badge {
+            background: #1e293b; padding: 6px 12px; border-radius: 8px;
+            font-weight: bold; color: #38bdf8; border: 1px solid #334155; font-size: 14px;
+        }
+
+        .mode-buttons-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .toggle-mode-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #ffffff; transition: all 0.2s; }
+        .toggle-mode-btn.active-green { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        .toggle-mode-btn.inactive-gray { background-color: #334155; color: #94a3b8; }
+
+        .slider-container { margin: 15px 0; text-align: center; color: #cbd5e1; font-size: 14px; }
+        .slider-container label { display: block; margin-bottom: 8px; font-weight: bold; color: #38bdf8; }
+
+        #player-slider {
+            width: 100%; accent-color: #0ea5e9; cursor: pointer; background: #334155; height: 6px; border-radius: 3px;
+        }
+
+        .qr-code-wrapper { background: #ffffff; padding: 10px; border-radius: 12px; display: inline-block; margin: 15px 0 5px 0; }
+        .qr-info { font-size: 13px; color: #94a3b8; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <button id="dir-right-btn" class="dir-btn inactive-gray" title="По часовниковата стрелка (+)">↻</button>
+            <button id="settings-btn" class="settings-gear-btn" title="Настройки на стаята">⚙️</button>
+            <button id="dir-left-btn" class="dir-btn active-green shiny-green" title="Обратно на часовниковата стрелка (-)">↺</button>
+        </header>
+
+        <div class="preview-wrapper">
+            <div class="hint-title">Посока на въртене в стаята</div>
+            <div id="hint-quadrant" class="quadrant-preview-box" title="Кликни за смяна на посоката">
+                <div class="circle pink ball" data-pos="0"></div>
+                <div class="circle cyan ball" data-pos="1"></div>
+                <div class="circle yellow ball" data-pos="2"></div>
+                <div class="circle pink ball" data-pos="3"></div>
+            </div>
+        </div>
+
+        <button id="go-to-play-btn" class="start-game-btn">СТАРТ ИГРА</button>
+        <a href="index.html" class="back-btn-link">НАЗАД КЪМ НАЧАЛОТО</a>
+    </div>
+
+    <div id="qr-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="close-qr">&times;</span>
+            <h3 id="modal-title">Настройки на стаята</h3>
+            
+            <div class="player-profile-row">
+                <div id="avatar-btn" class="player-avatar" title="Виж личен QR код">👤</div>
+                <div class="player-name-info">Игрова сесия</div>
+                <div class="player-score-badge">💎 150</div>
+            </div>
+
+            <div id="room-settings-section">
+                <div class="mode-buttons-container">
+                    <button id="btn-2x2" class="toggle-mode-btn active-green">2 по 2</button>
+                    <button id="btn-3x3" class="toggle-mode-btn inactive-gray">3 по 3</button>
+                </div>
+
+                <div class="slider-container">
+                    <label for="player-slider">Максимум играчи: <span id="slider-value">4</span></label>
+                    <input type="range" id="player-slider" min="1" max="27" value="4">
+                </div>
+            </div>
+
+            <div class="qr-code-wrapper">
+                <canvas id="qr-canvas"></canvas>
+            </div>
+            
+            <p id="qr-info" class="qr-info">Сканирай с телефон, за да се присъединиш!</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dirLeftBtn = document.getElementById('dir-left-btn');
+            const dirRightBtn = document.getElementById('dir-right-btn');
+            const hintQuadrant = document.getElementById('hint-quadrant');
+            
+            // Четене на запазената посока в localStorage (ако има такава)
+            let currentDir = localStorage.getItem('quadratee_dir') || 'left';
+
+            function updateDirectionUI(dir) {
+                currentDir = dir;
+                localStorage.setItem('quadratee_dir', dir);
+                if (dir === 'left') {
+                    dirLeftBtn.classList.add('active-green', 'shiny-green');
+                    dirLeftBtn.classList.remove('inactive-gray');
+                    dirRightBtn.classList.add('inactive-gray');
+                    dirRightBtn.classList.remove('active-green', 'shiny-green');
+                } else {
+                    dirRightBtn.classList.add('active-green', 'shiny-green');
+                    dirRightBtn.classList.remove('inactive-gray');
+                    dirLeftBtn.classList.add('inactive-gray');
+                    dirLeftBtn.classList.remove('active-green', 'shiny-green');
+                }
+            }
+
+            updateDirectionUI(currentDir);
+
+            dirLeftBtn.addEventListener('click', () => updateDirectionUI('left'));
+            dirRightBtn.addEventListener('click', () => updateDirectionUI('right'));
+
+            // Интерактивно завъртане на хинт квадранта в лобито (обвързано със стрелките)
+            function rotateHintQuadrant() {
+                const balls = Array.from(hintQuadrant.querySelectorAll('.circle'));
+                let classes = balls.map(b => {
+                    if (b.classList.contains('pink')) return 'pink';
+                    if (b.classList.contains('cyan')) return 'cyan';
+                    return 'yellow';
+                });
+
+                if (currentDir === 'right') {
+                    const temp = classes[2];
+                    classes[2] = classes[3];
+                    classes[3] = classes[1];
+                    classes[1] = classes[0];
+                    classes[0] = temp;
+                } else {
+                    const temp = classes[0];
+                    classes[0] = classes[1];
+                    classes[1] = classes[3];
+                    classes[3] = classes[2];
+                    classes[2] = temp;
+                }
+
+                balls.forEach((b, idx) => {
+                    b.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        b.className = 'circle ball ' + classes[idx];
+                        b.style.transform = 'scale(1)';
+                    }, 120);
+                });
+            }
+
+            hintQuadrant.addEventListener('click', () => {
+                // При клик върху квадранта сменяме посоката и завъртаме
+                let newDir = (currentDir === 'left') ? 'right' : 'left';
+                updateDirectionUI(newDir);
+                rotateHintQuadrant();
+            });
+
+            // Автоматичен лек демонстрационен ефект в лобито
+            setInterval(() => {
+                rotateHintQuadrant();
+            }, 3000);
+
+            // Модал за настройки на стаята
+            const settingsBtn = document.getElementById('settings-btn');
+            const qrModal = document.getElementById('qr-modal');
+            const closeQr = document.getElementById('close-qr');
+
+            settingsBtn.addEventListener('click', () => {
+                qrModal.style.display = 'flex';
+                try {
+                    QRCode.toCanvas(document.getElementById('qr-canvas'), window.location.href, { width: 140 }, function (error) {
+                        if (error) console.error(error);
+                    });
+                } catch(e) {}
+            });
+
+            closeQr.addEventListener('click', () => { qrModal.style.display = 'none'; });
+            window.addEventListener('click', (e) => { if (e.target === qrModal) qrModal.style.display = 'none'; });
+
+            const slider = document.getElementById('player-slider');
+            const sliderVal = document.getElementById('slider-value');
+            slider.addEventListener('input', (e) => { sliderVal.textContent = e.target.value; });
+
+            // Преход към активната игра
+            document.getElementById('go-to-play-btn').addEventListener('click', () => {
+                window.location.href = 'play.html';
+            });
+        });
+    </script>
+</body>
+</html>

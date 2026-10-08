@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratee - Активна игра</title>
+    <style>
+        @keyframes pulseZoom {
+            0% { transform: scale(1); color: #38bdf8; }
+            50% { transform: scale(1.3); color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
+            100% { transform: scale(1); color: #38bdf8; }
+        }
+
+        .timer-urgent {
+            animation: pulseZoom 0.6s infinite ease-in-out;
+        }
+
+        @keyframes winningGlow {
+            0% { box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(56, 189, 248, 0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 18px rgba(16, 185, 129, 0.6); transform: scale(1.04); }
+            100% { box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(56, 189, 248, 0.4); transform: scale(1); }
+        }
+
+        .circle.winning {
+            animation: winningGlow 1.8s infinite ease-in-out;
+            border: 2px solid rgba(255, 255, 255, 0.8) !important;
+            z-index: 10;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .game-info-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 10px 14px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .player-mini-avatar {
+            font-size: 18px;
+            background: #0f172a;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid #334155;
+            cursor: pointer;
+        }
+
+        .game-timer {
+            font-weight: bold;
+            color: #38bdf8;
+            font-size: 16px;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .game-diamonds-badge {
+            font-weight: bold;
+            color: #38bdf8;
+            font-size: 14px;
+            background: #0f172a;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .board-4x4-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 12px;
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #334155;
+            aspect-ratio: 1 / 1;
+            box-sizing: border-box;
+        }
+
+        .quadrant-box {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            justify-items: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s ease, transform 0.3s ease-in-out;
+        }
+
+        .quadrant-box:hover {
+            border-color: #38bdf8;
+        }
+
+        .circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .circle.pink { background-color: #ec4899; }
+        .circle.cyan { background-color: #06b6d4; }
+        .circle.yellow { background-color: #eab308; }
+
+        .controls-bottom-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stop-game-btn {
+            display: block;
+            width: 100%;
+            background: #ef4444;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            border: none;
+            text-align: center;
+            cursor: pointer;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            transition: background 0.2s;
+        }
+
+        .stop-game-btn:hover {
+            background: #dc2626;
+        }
+
+        .back-btn-link {
+            display: block;
+            width: 100%;
+            background: #334155;
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .back-btn-link:hover {
+            background: #475569;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-info-header">
+            <div id="player-avatar-btn" class="player-mini-avatar" title="Аватар на играча">🤖</div>
+            <div id="timer-display" class="game-timer">02:45</div>
+            <div class="game-diamonds-badge">💎 <span id="diamonds-count">150</span></div>
+        </header>
+
+        <div class="board-4x4-grid" id="game-board">
+            <div class="quadrant-box" data-quadrant="0">
+                <div class="circle ball" data-local="0"></div>
+                <div class="circle ball" data-local="1"></div>
+                <div class="circle ball" data-local="2"></div>
+                <div class="circle ball" data-local="3"></div>
+            </div>
+            <div class="quadrant-box" data-quadrant="1">
+                <div class="circle ball" data-local="0"></div>
+                <div class="circle ball" data-local="1"></div>
+                <div class="circle ball" data-local="2"></div>
+                <div class="circle ball" data-local="3"></div>
+            </div>
+            <div class="quadrant-box" data-quadrant="2">
+                <div class="circle ball" data-local="0"></div>
+                <div class="circle ball" data-local="1"></div>
+                <div class="circle ball" data-local="2"></div>
+                <div class="circle ball" data-local="3"></div>
+            </div>
+            <div class="quadrant-box" data-quadrant="3">
+                <div class="circle ball" data-local="0"></div>
+                <div class="circle ball" data-local="1"></div>
+                <div class="circle ball" data-local="2"></div>
+                <div class="circle ball" data-local="3"></div>
+            </div>
+        </div>
+
+        <div class="controls-bottom-container">
+            <button id="stop-game-btn" class="stop-game-btn">СТОП ИГРА</button>
+            <a href="index.html" class="back-btn-link">НАЗАД КЪМ НАЧАЛОТО</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Начално състояние [0: горе-ляво, 1: горе-дясно, 2: долу-ляво, 3: долу-дясно] за всеки квадрант
+            let quadrantsState = [
+                ['pink', 'yellow', 'cyan', 'yellow'],     // Квадрант 0
+                ['cyan', 'yellow', 'pink', 'cyan'],       // Квадрант 1
+                ['pink', 'cyan', 'pink', 'pink'],         // Квадрант 2
+                ['cyan', 'pink', 'yellow', 'cyan']        // Квадрант 3
+            ];
+
+            const currentDir = localStorage.getItem('quadratee_dir') || 'right';
+            const quadrants = document.querySelectorAll('.quadrant-box');
+            let quadrantAngles = [0, 0, 0, 0];
+
+            function renderBoard() {
+                quadrants.forEach((quad, qIndex) => {
+                    let balls = quad.querySelectorAll('.ball');
+                    let colors = quadrantsState[qIndex];
+                    balls.forEach((ball, bIdx) => {
+                        ball.className = 'circle ball ' + colors[bIdx];
+                        ball.classList.remove('winning');
+                    });
+                });
+            }
+
+            renderBoard();
+
+            function checkAndHighlightWins() {
+                document.querySelectorAll('.board-4x4-grid .ball').forEach(b => b.classList.remove('winning'));
+
+                let visualMatrix = Array(4).fill(null).map(() => Array(4).fill(''));
+                let ballElementsMatrix = Array(4).fill(null).map(() => Array(4).fill(null));
+
+                quadrants.forEach((quad, qIndex) => {
+                    let startR = Math.floor(qIndex / 2) * 2;
+                    let startC = (qIndex % 2) * 2;
+
+                    let balls = quad.querySelectorAll('.ball');
+                    let mapping = [
+                        {r: startR, c: startC},
+                        {r: startR, c: startC + 1},
+                        {r: startR + 1, c: startC},
+                        {r: startR + 1, c: startC + 1}
+                    ];
+
+                    balls.forEach((ball, bIdx) => {
+                        let pos = mapping[bIdx];
+                        let color = 'pink';
+                        if (ball.classList.contains('cyan')) color = 'cyan';
+                        if (ball.classList.contains('yellow')) color = 'yellow';
+                        if (ball.classList.contains('pink')) color = 'pink';
+
+                        visualMatrix[pos.r][pos.c] = color;
+                        ballElementsMatrix[pos.r][pos.c] = ball;
+                    });
+                });
+
+                let winningCoords = new Set();
+
+                // Проверка по хоризонтала (редове)
+                for (let r = 0; r < 4; r++) {
+                    let count = 1;
+                    for (let c = 0; c < 3; c++) {
+                        if (visualMatrix[r][c] !== '' && visualMatrix[r][c] === visualMatrix[r][c+1]) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                for (let k = 0; k < count; k++) {
+                                    winningCoords.add(`${r},${c - k}`);
+                                }
+                            }
+                            count = 1;
+                        }
+                    }
+                    if (count >= 3) {
+                        for (let k = 0; k < count; k++) {
+                            winningCoords.add(`${r},${3 - k}`);
+                        }
+                    }
+                }
+
+                // Проверка по вертикала (колони)
+                for (let c = 0; c < 4; c++) {
+                    let count = 1;
+                    for (let r = 0; r < 3; r++) {
+                        if (visualMatrix[r][c] !== '' && visualMatrix[r][c] === visualMatrix[r+1][c]) {
+                            count++;
+                        } else {
+                            if (count >= 3) {
+                                for (let k = 0; k < count; k++) {
+                                    winningCoords.add(`${r - k},${c}`);
+                                }
+                            }
+                            count = 1;
+                        }
+                    }
+                    if (count >= 3) {
+                        for (let k = 0; k < count; k++) {
+                            winningCoords.add(`${3 - k},${c}`);
+                        }
+                    }
+                }
+
+                winningCoords.forEach(coord => {
+                    let [r, c] = coord.split(',').map(Number);
+                    if (ballElementsMatrix[r][c]) {
+                        ballElementsMatrix[r][c].classList.add('winning');
+                    }
+                });
+            }
+
+            setTimeout(checkAndHighlightWins, 50);
+
+            quadrants.forEach((quad, qIndex) => {
+                quad.addEventListener('click', () => {
+                    let colors = quadrantsState[qIndex];
+
+                    if (currentDir === 'right') {
+                        // Чиите (топките) се въртят заедно с масата по часовниковата стрелка: 0->1->3->2->0
+                        let temp = colors[0];
+                        colors[0] = colors[2]; // Долу-ляво отива горе-ляво
+                        colors[2] = colors[3]; // Долу-дясно отива долу-ляво
+                        colors[3] = colors[1]; // Горе-дясно отива долу-дясно
+                        colors[1] = temp;      // Старото горе-ляво отива горе-дясно
+                    } else {
+                        // Обратно на часовниковата стрелка: 0->2->3->1->0
+                        let temp = colors[0];
+                        colors[0] = colors[1]; // Горе-дясно отива горе-ляво
+                        colors[1] = colors[3]; // Долу-дясно отива горе-дясно
+                        colors[3] = colors[2]; // Долу-ляво отива долу-дясно
+                        colors[2] = temp;      // Старото горе-ляво отива долу-ляво
+                    }
+
+                    let angleStep = (currentDir === 'right') ? 90 : -90;
+                    quadrantAngles[qIndex] += angleStep;
+                    quad.style.transform = `rotate(${quadrantAngles[qIndex]}deg)`;
+
+                    renderBoard();
+                    setTimeout(checkAndHighlightWins, 150);
+                });
+            });
+
+            let timeLeft = 165;
+            const timerDisplay = document.getElementById('timer-display');
+            
+            const timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    let minutes = Math.floor(timeLeft / 60);
+                    let seconds = timeLeft % 60;
+                    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                    if (timeLeft === 2) {
+                        timerDisplay.classList.add('timer-urgent');
+                    }
+
+                    if (timeLeft === 0) {
+                        clearInterval(timerInterval);
+                        timerDisplay.classList.remove('timer-urgent');
+                        alert('Времето изтече!');
+                    }
+                }
+            }, 1000);
+
+            const stopBtn = document.getElementById('stop-game-btn');
+            stopBtn.addEventListener('click', () => {
+                clearInterval(timerInterval);
+
+                const winningBalls = document.querySelectorAll('.board-4x4-grid .ball.winning');
+                let activeScoreCount = winningBalls.length;
+
+                let multiplier = (timeLeft <= 1) ? 0 : timeLeft;
+                let bonusScore = multiplier * activeScoreCount;
+                
+                let currentDiamonds = parseInt(document.getElementById('diamonds-count').textContent) || 150;
+                let totalDiamonds = currentDiamonds + bonusScore;
+
+                alert(`Играта е спряна!\nОставащо време: ${timeLeft} сек.\nСветещи печеливши топки: ${activeScoreCount}\nБонус точки: ${multiplier} × ${activeScoreCount} = ${bonusScore}\nОбщо диаманти: ${totalDiamonds}`);
+                
+                document.getElementById('diamonds-count').textContent = totalDiamonds;
+            });
+        });
+    </script>
+</body>
+</html>

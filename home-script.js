@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Езикови настройки модал
     const settingsBtn = document.getElementById('lang-settings-btn');
     const langModal = document.getElementById('lang-modal');
     const closeLang = document.getElementById('close-lang');
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         closeLang.addEventListener('click', () => { langModal.style.display = 'none'; });
     }
 
-    // QR Скенер модал
     const qrScanBtn = document.getElementById('qr-scan-btn');
     const scannerModal = document.getElementById('qr-scanner-modal');
     const closeScanner = document.getElementById('close-scanner');
@@ -23,13 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         closeScanner.addEventListener('click', () => { scannerModal.style.display = 'none'; });
     }
 
-    // Затваряне при клик извън модалите
     window.addEventListener('click', (event) => {
         if (event.target === langModal) langModal.style.display = 'none';
         if (event.target === scannerModal) scannerModal.style.display = 'none';
     });
 
-    // Логика за 4-цифрените OTP полета и проверка за ключ 1001
     const codeInputs = document.querySelectorAll('.code-box-input');
 
     codeInputs.forEach((input, index) => {
@@ -58,12 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (code.length === 4) {
             if (code === '1001') {
-                // Успешен вход с правилния ключ
                 setTimeout(() => {
                     window.location.href = `game.html?access=granted&code=${code}`;
                 }, 300);
             } else {
-                // Грешен код - изчистваме полетата с лек ефект или съобщение
                 setTimeout(() => {
                     alert('Невалиден код! Използвайте ключа за достъп.');
                     codeInputs.forEach(input => input.value = '');
