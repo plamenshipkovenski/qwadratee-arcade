@@ -15,15 +15,10 @@
             animation: pulseZoom 0.6s infinite ease-in-out;
         }
 
-        @keyframes winningGlow {
-            0% { box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(56, 189, 248, 0.4); transform: scale(1); }
-            50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 18px rgba(16, 185, 129, 0.6); transform: scale(1.04); }
-            100% { box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 8px rgba(56, 189, 248, 0.4); transform: scale(1); }
-        }
-
+        /* Статичен, лек и красив хайлайт без тежки анимации */
         .circle.winning {
-            animation: winningGlow 1.8s infinite ease-in-out;
-            border: 2px solid rgba(255, 255, 255, 0.8) !important;
+            border: 2px solid rgba(255, 255, 255, 0.9) !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), inset 0 0 6px rgba(255, 255, 255, 0.5);
             z-index: 10;
         }
 
@@ -120,7 +115,7 @@
             align-items: center;
             cursor: pointer;
             user-select: none;
-            transition: border-color 0.2s ease, transform 0.3s ease-in-out;
+            transition: border-color 0.2s ease;
         }
 
         .quadrant-box:hover {
@@ -132,6 +127,7 @@
             height: 38px;
             border-radius: 50%;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
         }
 
         .circle.pink { background-color: #ec4899; }
@@ -227,17 +223,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Начално състояние [0: горе-ляво, 1: горе-дясно, 2: долу-ляво, 3: долу-дясно] за всеки квадрант
+            const colorNames = ['pink', 'cyan', 'yellow'];
+            
             let quadrantsState = [
-                ['pink', 'yellow', 'cyan', 'yellow'],     // Квадрант 0
-                ['cyan', 'yellow', 'pink', 'cyan'],       // Квадрант 1
-                ['pink', 'cyan', 'pink', 'pink'],         // Квадрант 2
-                ['cyan', 'pink', 'yellow', 'cyan']        // Квадрант 3
+                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
+                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
+                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
+                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]]
             ];
 
             const currentDir = localStorage.getItem('quadratee_dir') || 'right';
             const quadrants = document.querySelectorAll('.quadrant-box');
-            let quadrantAngles = [0, 0, 0, 0];
+            let animatingQuadrants = new Set();
 
             function renderBoard() {
                 quadrants.forEach((quad, qIndex) => {
@@ -284,7 +281,6 @@
 
                 let winningCoords = new Set();
 
-                // Проверка по хоризонтала (редове)
                 for (let r = 0; r < 4; r++) {
                     let count = 1;
                     for (let c = 0; c < 3; c++) {
@@ -293,7 +289,7 @@
                         } else {
                             if (count >= 3) {
                                 for (let k = 0; k < count; k++) {
-                                    winningCoords.add(`${r},${c - k}`);
+                                    winningCoords.add(`${r},${c - count + 1 + k}`);
                                 }
                             }
                             count = 1;
@@ -301,12 +297,11 @@
                     }
                     if (count >= 3) {
                         for (let k = 0; k < count; k++) {
-                            winningCoords.add(`${r},${3 - k}`);
+                            winningCoords.add(`${r},${4 - count + k}`);
                         }
                     }
                 }
 
-                // Проверка по вертикала (колони)
                 for (let c = 0; c < 4; c++) {
                     let count = 1;
                     for (let r = 0; r < 3; r++) {
@@ -315,7 +310,7 @@
                         } else {
                             if (count >= 3) {
                                 for (let k = 0; k < count; k++) {
-                                    winningCoords.add(`${r - k},${c}`);
+                                    winningCoords.add(`${r - count + 1 + k},${c}`);
                                 }
                             }
                             count = 1;
@@ -323,7 +318,7 @@
                     }
                     if (count >= 3) {
                         for (let k = 0; k < count; k++) {
-                            winningCoords.add(`${3 - k},${c}`);
+                            winningCoords.add(`${4 - count + k},${c}`);
                         }
                     }
                 }
@@ -336,34 +331,45 @@
                 });
             }
 
-            setTimeout(checkAndHighlightWins, 50);
+            checkAndHighlightWins();
 
             quadrants.forEach((quad, qIndex) => {
                 quad.addEventListener('click', () => {
+                    if (animatingQuadrants.has(qIndex)) return;
+                    animatingQuadrants.add(qIndex);
+
                     let colors = quadrantsState[qIndex];
+                    let balls = quad.querySelectorAll('.ball');
 
-                    if (currentDir === 'right') {
-                        // Чиите (топките) се въртят заедно с масата по часовниковата стрелка: 0->1->3->2->0
-                        let temp = colors[0];
-                        colors[0] = colors[2]; // Долу-ляво отива горе-ляво
-                        colors[2] = colors[3]; // Долу-дясно отива долу-ляво
-                        colors[3] = colors[1]; // Горе-дясно отива долу-дясно
-                        colors[1] = temp;      // Старото горе-ляво отива горе-дясно
-                    } else {
-                        // Обратно на часовниковата стрелка: 0->2->3->1->0
-                        let temp = colors[0];
-                        colors[0] = colors[1]; // Горе-дясно отива горе-ляво
-                        colors[1] = colors[3]; // Долу-дясно отива горе-дясно
-                        colors[3] = colors[2]; // Долу-ляво отива долу-дясно
-                        colors[2] = temp;      // Старото горе-ляво отива долу-ляво
-                    }
+                    // Визуално въртене и свиване на топките за илюзия на движение
+                    let spinAngle = (currentDir === 'right') ? 'rotate(90deg) scale(0.85)' : 'rotate(-90deg) scale(0.85)';
+                    balls.forEach(b => {
+                        b.style.transform = spinAngle;
+                    });
 
-                    let angleStep = (currentDir === 'right') ? 90 : -90;
-                    quadrantAngles[qIndex] += angleStep;
-                    quad.style.transform = `rotate(${quadrantAngles[qIndex]}deg)`;
+                    setTimeout(() => {
+                        if (currentDir === 'right') {
+                            let temp = colors[0];
+                            colors[0] = colors[2]; 
+                            colors[2] = colors[3]; 
+                            colors[3] = colors[1]; 
+                            colors[1] = temp;      
+                        } else {
+                            let temp = colors[0];
+                            colors[0] = colors[1]; 
+                            colors[1] = colors[3]; 
+                            colors[3] = colors[2]; 
+                            colors[2] = temp;      
+                        }
 
-                    renderBoard();
-                    setTimeout(checkAndHighlightWins, 150);
+                        renderBoard();
+                        checkAndHighlightWins();
+
+                        balls.forEach(b => {
+                            b.style.transform = 'rotate(0deg) scale(1)';
+                        });
+                        animatingQuadrants.delete(qIndex);
+                    }, 200);
                 });
             });
 
