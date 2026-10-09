@@ -15,7 +15,7 @@
             animation: pulseZoom 0.6s infinite ease-in-out;
         }
 
-        /* Статичен, лек и красив хайлайт без тежки анимации */
+        /* Статичен, лек и красив хайлайт за печелившите топки */
         .circle.winning {
             border: 2px solid rgba(255, 255, 255, 0.9) !important;
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), inset 0 0 6px rgba(255, 255, 255, 0.5);
@@ -130,9 +130,10 @@
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
         }
 
-        .circle.pink { background-color: #ec4899; }
-        .circle.cyan { background-color: #06b6d4; }
-        .circle.yellow { background-color: #eab308; }
+        /* Динамични класове за цветовете спрямо избраната палитра */
+        .circle.color-a { background-color: var(--c-primary, #ec4899); }
+        .circle.color-b { background-color: var(--c-secondary, #06b6d4); }
+        .circle.color-c { background-color: var(--c-tertiary, #eab308); }
 
         .controls-bottom-container {
             display: flex;
@@ -190,28 +191,28 @@
 
         <div class="board-4x4-grid" id="game-board">
             <div class="quadrant-box" data-quadrant="0">
-                <div class="circle ball" data-local="0"></div>
-                <div class="circle ball" data-local="1"></div>
-                <div class="circle ball" data-local="2"></div>
-                <div class="circle ball" data-local="3"></div>
+                <div class="circle ball color-a" data-local="0"></div>
+                <div class="circle ball color-b" data-local="1"></div>
+                <div class="circle ball color-c" data-local="2"></div>
+                <div class="circle ball color-a" data-local="3"></div>
             </div>
             <div class="quadrant-box" data-quadrant="1">
-                <div class="circle ball" data-local="0"></div>
-                <div class="circle ball" data-local="1"></div>
-                <div class="circle ball" data-local="2"></div>
-                <div class="circle ball" data-local="3"></div>
+                <div class="circle ball color-b" data-local="0"></div>
+                <div class="circle ball color-c" data-local="1"></div>
+                <div class="circle ball color-a" data-local="2"></div>
+                <div class="circle ball color-b" data-local="3"></div>
             </div>
             <div class="quadrant-box" data-quadrant="2">
-                <div class="circle ball" data-local="0"></div>
-                <div class="circle ball" data-local="1"></div>
-                <div class="circle ball" data-local="2"></div>
-                <div class="circle ball" data-local="3"></div>
+                <div class="circle ball color-c" data-local="0"></div>
+                <div class="circle ball color-a" data-local="1"></div>
+                <div class="circle ball color-b" data-local="2"></div>
+                <div class="circle ball color-c" data-local="3"></div>
             </div>
             <div class="quadrant-box" data-quadrant="3">
-                <div class="circle ball" data-local="0"></div>
-                <div class="circle ball" data-local="1"></div>
-                <div class="circle ball" data-local="2"></div>
-                <div class="circle ball" data-local="3"></div>
+                <div class="circle ball color-a" data-local="0"></div>
+                <div class="circle ball color-b" data-local="1"></div>
+                <div class="circle ball color-c" data-local="2"></div>
+                <div class="circle ball color-a" data-local="3"></div>
             </div>
         </div>
 
@@ -223,13 +224,29 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const colorNames = ['pink', 'cyan', 'yellow'];
+            // 1. Зареждане на палитрата от localStorage (по подразбиране палитра 1)
+            const palettes = {
+                '1': { primary: '#ec4899', secondary: '#06b6d4', tertiary: '#eab308' }, // Розов, Циан, Жълт
+                '2': { primary: '#8b5cf6', secondary: '#10b981', tertiary: '#f97316' }, // Лилав, Зелен, Оранжев
+                '3': { primary: '#3b82f6', secondary: '#ef4444', tertiary: '#14b8a6' }  // Син, Червен, Тюркоазен
+            };
+
+            const savedPaletteKey = localStorage.getItem('quadratee_palette') || '1';
+            const activePalette = palettes[savedPaletteKey] || palettes['1'];
+
+            // Прилагане на CSS променливите за палитрата
+            document.documentElement.style.setProperty('--c-primary', activePalette.primary);
+            document.documentElement.style.setProperty('--c-secondary', activePalette.secondary);
+            document.documentElement.style.setProperty('--c-tertiary', activePalette.tertiary);
+
+            const colorTypes = ['color-a', 'color-b', 'color-c'];
             
+            // 2. Интелигентно аркадно генериране с гарантирани активни тройки на старта
             let quadrantsState = [
-                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
-                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
-                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]],
-                [colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)], colorNames[Math.floor(Math.random()*3)]]
+                [colorTypes[0], colorTypes[0], colorTypes[0], colorTypes[1]], // Квадрант 0 съдържа готова тройка!
+                [colorTypes[1], colorTypes[2], colorTypes[1], colorTypes[2]],
+                [colorTypes[2], colorTypes[2], colorTypes[2], colorTypes[0]], // Квадрант 2 съдържа втора готова тройка!
+                [colorTypes[0], colorTypes[1], colorTypes[2], colorTypes.sort(() => Math.random() - 0.5)[0]]
             ];
 
             const currentDir = localStorage.getItem('quadratee_dir') || 'right';
@@ -269,10 +286,10 @@
 
                     balls.forEach((ball, bIdx) => {
                         let pos = mapping[bIdx];
-                        let color = 'pink';
-                        if (ball.classList.contains('cyan')) color = 'cyan';
-                        if (ball.classList.contains('yellow')) color = 'yellow';
-                        if (ball.classList.contains('pink')) color = 'pink';
+                        let color = 'color-a';
+                        if (ball.classList.contains('color-b')) color = 'color-b';
+                        if (ball.classList.contains('color-c')) color = 'color-c';
+                        if (ball.classList.contains('color-a')) color = 'color-a';
 
                         visualMatrix[pos.r][pos.c] = color;
                         ballElementsMatrix[pos.r][pos.c] = ball;
@@ -341,7 +358,6 @@
                     let colors = quadrantsState[qIndex];
                     let balls = quad.querySelectorAll('.ball');
 
-                    // Визуално въртене и свиване на топките за илюзия на движение
                     let spinAngle = (currentDir === 'right') ? 'rotate(90deg) scale(0.85)' : 'rotate(-90deg) scale(0.85)';
                     balls.forEach(b => {
                         b.style.transform = spinAngle;
