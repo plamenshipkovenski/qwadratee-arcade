@@ -119,7 +119,7 @@
         .ball-indigo  { background: radial-gradient(circle at 30% 30%, #05d9e8, #005f73); }   /* 30% */
         .ball-gold    { background: radial-gradient(circle at 30% 30%, #ffbe0b, #fb5607); }   /* 30% */
 
-        /* Хайлайт ефект за топче от печеливша линия (1 точка) */
+        /* Хайлайт ефект за топче от печеливша линия */
         .ball.highlighted {
             box-shadow: 0 0 15px #fff, inset -3px -3px 8px rgba(0,0,0,0.6);
             border: 2px solid #fff;
@@ -144,6 +144,7 @@
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
             transition: background 0.2s;
+            width: 100%;
         }
 
         .btn:hover {
@@ -173,9 +174,9 @@
         <div class="quadrant" data-quad-index="3"></div>
     </div>
 
-    <!-- Долен панел -->
+    <!-- Долен панел с бутон СТАРТ / СТОП -->
     <div class="game-footer">
-        <button class="btn" id="btnBack">Изход в менюто</button>
+        <button class="btn" id="btnAction">СТАРТ</button>
     </div>
 
     <script>
@@ -197,8 +198,29 @@
         ];
 
         const quadElements = document.querySelectorAll('.quadrant');
+        const actionBtn = document.getElementById('btnAction');
 
-        // Създаване на пълна 4х4 матрица от четирите квадранта
+        let timeLeft = 60;
+        let timerInterval = null;
+        let gameStarted = false;
+
+        function startTimer() {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timeLeft;
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 1) {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+                } else {
+                    timeLeft = 1;
+                    timerElement.textContent = timeLeft;
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
         function getFullBoardMatrix() {
             let full = [
                 [null, null, null, null],
@@ -207,31 +229,25 @@
                 [null, null, null, null]
             ];
 
-            // Квадрант 0 (горе-ляво) -> редове 0-1, колони 0-1
             full[0][0] = boardState[0][0]; full[0][1] = boardState[0][1];
             full[1][0] = boardState[0][2]; full[1][1] = boardState[0][3];
 
-            // Квадрант 1 (горе-дясно) -> редове 0-1, колони 2-3
             full[0][2] = boardState[1][0]; full[0][3] = boardState[1][1];
             full[1][2] = boardState[1][2]; full[1][3] = boardState[1][3];
 
-            // Квадрант 2 (долу-ляво) -> редове 2-3, колони 0-1
             full[2][0] = boardState[2][0]; full[2][1] = boardState[2][1];
             full[3][0] = boardState[2][2]; full[3][1] = boardState[2][3];
 
-            // Квадрант 3 (долу-дясно) -> редове 2-3, колони 2-3
             full[2][2] = boardState[3][0]; full[2][3] = boardState[3][1];
             full[3][2] = boardState[3][2]; full[3][3] = boardState[3][3];
 
             return full;
         }
 
-        // Проверка за хоризонтални и вертикални линии (3 или 4 еднакви)
         function checkCombinations() {
             let fullMatrix = getFullBoardMatrix();
             let isHighlighted = Array(4).fill(0).map(() => Array(4).fill(false));
 
-            // Проверка по редове (хоризонтала)
             for (let r = 0; r < 4; r++) {
                 let count = 1;
                 for (let c = 1; c < 4; c++) {
@@ -253,7 +269,6 @@
                 }
             }
 
-            // Проверка по колони (вертикала)
             for (let c = 0; c < 4; c++) {
                 let count = 1;
                 for (let r = 1; r < 4; r++) {
@@ -287,7 +302,6 @@
                 for (let i = 0; i < 4; i++) {
                     let colorClass = boardState[qIndex][i];
                     
-                    // Реални координати в 4х4 матрицата за това топче
                     let r = Math.floor(qIndex / 2) * 2 + Math.floor(i / 2);
                     let c = (qIndex % 2) * 2 + (i % 2);
 
@@ -296,7 +310,7 @@
 
                     if (highlightedMatrix[r][c]) {
                         ball.classList.add('highlighted');
-                        currentScore += 1; // Всяко хайлайтнато топче дава 1 точка
+                        currentScore += 1;
                     }
 
                     quad.appendChild(ball);
@@ -306,25 +320,48 @@
             document.getElementById('score').textContent = currentScore;
         }
 
-        renderBoard();
+        function endGame() {
+            gameStarted = false;
+            clearInterval(timerInterval);
 
-        // Клик с плъзгане на топчетата (FLIP), пресмятане на точките и импулс на бордъра
+            // Изчисляване на краен резултат в ДИАМАНТИ
+            const highlightedCount = parseInt(document.getElementById('score').textContent);
+            const diamonds = highlightedCount * timeLeft;
+
+            actionBtn.textContent = "ИЗХОД В МЕНЮТО";
+            alert(`Край на играта!\nХайлайтнати топчета: ${highlightedCount}\nОставащо време: ${timeLeft}s\n💎 Спечелени Диаманти: ${diamonds}`);
+        }
+
+        // Управление на бутона СТАРТ / СТОП / ИЗХОД
+        actionBtn.addEventListener('click', () => {
+            if (!gameStarted && actionBtn.textContent === "СТАРТ") {
+                gameStarted = true;
+                actionBtn.textContent = "СТОП";
+                renderBoard();
+                startTimer();
+            } else if (gameStarted && actionBtn.textContent === "СТОП") {
+                endGame();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        gsap.from('.arena-container', { duration: 0.6, scale: 0.8, opacity: 0, ease: 'power2.out' });
+
         quadElements.forEach(quad => {
             quad.addEventListener('click', () => {
+                if (!gameStarted) return;
+
                 const qIndex = parseInt(quad.dataset.quadIndex);
                 
-                // 1. Записваме старите елементи и техните позиции преди промяната
                 const oldBalls = Array.from(quad.querySelectorAll('.ball'));
                 const oldRects = oldBalls.map(b => b.getBoundingClientRect());
 
-                // 2. Математическо завъртане на масива по часовниковата стрелка
                 const [tl, tr, bl, br] = boardState[qIndex];
                 boardState[qIndex] = [bl, tl, br, tr];
 
-                // 3. Рисуваме новата подредба и пресмятаме точките
                 renderBoard();
 
-                // 4. FLIP анимация за самите топчета
                 const newBalls = Array.from(quad.querySelectorAll('.ball'));
                 newBalls.forEach((newBall, i) => {
                     const oldRect = oldRects[i];
@@ -339,19 +376,12 @@
                     );
                 });
 
-                // 5. Светлинен импулс на бордъра на самия квадрант
                 gsap.fromTo(quad, 
                     { borderColor: "rgba(56, 189, 248, 0.9)", scale: 0.98, boxShadow: "0 0 20px rgba(56, 189, 248, 0.4)" },
                     { borderColor: "rgba(255, 255, 255, 0.04)", scale: 1, boxShadow: "0 0 0px rgba(56, 189, 248, 0)", duration: 0.4, ease: "power2.out" }
                 );
             });
         });
-
-        document.getElementById('btnBack').addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-
-        gsap.from('.arena-container', { duration: 0.6, scale: 0.8, opacity: 0, ease: 'power2.out' });
     </script>
 </body>
 </html>
