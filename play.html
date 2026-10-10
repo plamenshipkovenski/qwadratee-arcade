@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WEBQUADRATEE - Игрална Арена</title>
-    <!-- GSAP за гладки анимации на радио-копчето -->
+    <!-- GSAP за радио-въртенето -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-bg: rgba(30, 41, 59, 0.25);
             --accent-color: #38bdf8;
             --text-color: #f8fafc;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.04);
         }
 
         * {
@@ -37,15 +37,15 @@
         /* Хедър / Информация за играча */
         .game-header {
             width: 100%;
-            max-width: 500px;
+            max-width: 360px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--card-bg);
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
             padding: 12px 20px;
             border-radius: 16px;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .player-info {
@@ -67,47 +67,66 @@
             opacity: 0.9;
         }
 
-        /* Игрално поле (Арена 2x2) */
+        /* Игрална Арена (2x2 квадранта, които образуват мрежа 4x4 за топчетата) */
         .arena-container {
             position: relative;
-            width: 320px;
-            height: 320px;
+            width: 340px;
+            height: 340px;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 12px;
+            gap: 8px; /* Еднакво разстояние между квадрантите */
             padding: 12px;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.9);
             border-radius: 24px;
-            border: 2px solid var(--border-color);
+            border: 2px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
+        /* Квадрантите носят самите топчета и се въртят заедно */
         .quadrant {
             background: var(--card-bg);
-            border-radius: 16px;
+            border-radius: 14px;
             border: 1px solid var(--border-color);
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            transition: border-color 0.2s;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px; /* Абсолютно същото разстояние, гарантиращо перфектна решетка без овърлап */
+            padding: 10px;
+            transition: border-color 0.2s, background 0.2s;
             position: relative;
-            overflow: hidden;
         }
 
         .quadrant:hover {
-            border-color: var(--accent-color);
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(30, 41, 59, 0.45);
         }
 
-        /* Елементи за управление долу */
+        /* Топчета - намалени с 1/3, перфектно центрирани и без риск от опиране */
+        .ball {
+            width: 82%;
+            height: 82%;
+            margin: auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Цветове на топчетата */
+        .ball-red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a); }
+        .ball-blue { background: radial-gradient(circle at 30% 30%, #4dabf7, #1864ab); }
+        .ball-green { background: radial-gradient(circle at 30% 30%, #51cf66, #2b8a3e); }
+        .ball-yellow { background: radial-gradient(circle at 30% 30%, #fcc419, #e67700); }
+
+        /* Долен панел */
         .game-footer {
             width: 100%;
-            max-width: 500px;
+            max-width: 360px;
             display: flex;
             justify-content: center;
-            gap: 15px;
         }
 
         .btn {
@@ -125,17 +144,12 @@
         .btn:hover {
             background: rgba(255, 255, 255, 0.2);
         }
-
-        .btn-danger {
-            background: rgba(244, 63, 94, 0.2);
-            color: #f43f5e;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Хедър с данни от localStorage -->
-    header class="game-header">
+    <!-- Хедър -->
+    <header class="game-header">
         <div class="player-info">
             <span class="player-avatar" id="displayAvatar">🐸</span>
             <span id="displayName">Играч</span>
@@ -146,63 +160,74 @@
         </div>
     </header>
 
-    <!-- Игрална Арена с 4 квадранта (Радио-копчета) -->
+    <!-- Арена -->
     <div class="arena-container" id="arena">
-        <div class="quadrant" data-index="0">🔴</div>
-        <div class="quadrant" data-index="1">🔵</div>
-        <div class="quadrant" data-index="2">🟢</div>
-        <div class="quadrant" data-index="3">🟡</div>
+        <div class="quadrant" data-quad-index="0"></div>
+        <div class="quadrant" data-quad-index="1"></div>
+        <div class="quadrant" data-quad-index="2"></div>
+        <div class="quadrant" data-quad-index="3"></div>
     </div>
 
-    <!-- Долен контролен панел -->
+    <!-- Долен панел -->
     <div class="game-footer">
         <button class="btn" id="btnBack">Изход в менюто</button>
     </div>
 
     <script>
-        // 1. Зареждане на запазените данни от localStorage
-        const playerName = localStorage.getItem('quadratee_name') || 'Играч';
-        const playerAvatar = localStorage.getItem('quadratee_avatar') || '🐸';
-        
-        document.getElementById('displayName').textContent = playerName;
-        document.getElementById('displayAvatar').textContent = playerAvatar;
+        document.getElementById('displayName').textContent = localStorage.getItem('quadratee_name') || 'Играч';
+        document.getElementById('displayAvatar').textContent = localStorage.getItem('quadratee_avatar') || '🐸';
 
-        // Четене на URL параметри (Соло или Мултиплейър стая)
-        const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode') || 'solo';
-        const roomCode = urlParams.get('room');
-        
-        if (mode === 'multi') {
-            console.log(`Мултиплейър режим в стая: ${roomCode}`);
+        let boardState = [
+            ['ball-red', 'ball-blue', 'ball-green', 'ball-yellow'],  
+            ['ball-yellow', 'ball-green', 'ball-blue', 'ball-red'],  
+            ['ball-blue', 'ball-red', 'ball-yellow', 'ball-green'],  
+            ['ball-green', 'ball-yellow', 'ball-red', 'ball-blue']   
+        ];
+
+        const quadElements = document.querySelectorAll('.quadrant');
+
+        function renderBoard() {
+            quadElements.forEach((quad, qIndex) => {
+                quad.innerHTML = '';
+                boardState[qIndex].forEach(colorClass => {
+                    const ball = document.createElement('div');
+                    ball.className = `ball ${colorClass}`;
+                    quad.appendChild(ball);
+                });
+            });
         }
 
-        // 2. Радио-копче логика с GSAP и натрупване на ъгъла (Additive Rotation)
-        const quadrants = document.querySelectorAll('.quadrant');
+        renderBoard();
 
-        quadrants.forEach(quad => {
-            // Пазим текущия натрупан ъгъл за всеки квадрант поотделно
+        quadElements.forEach(quad => {
             let currentRotation = 0;
 
             quad.addEventListener('click', () => {
-                // Прибавяме точно 90 градуса при всяко цъкане
+                const qIndex = parseInt(quad.dataset.quadIndex);
                 currentRotation += 90;
 
-                // GSAP анимация с пружиниращ ефект (тип радио-копче)
                 gsap.to(quad, {
                     rotation: currentRotation,
                     duration: 0.4,
-                    ease: "back.out(1.7)", // Приятен тактилен отскок в края
-                    overwrite: "auto"      // Позволява бързи повторни тапове без забиване
+                    ease: "back.out(1.7)",
+                    overwrite: "auto",
+                    onComplete: () => {
+                        const [tl, tr, bl, br] = boardState[qIndex];
+                        boardState[qIndex] = [bl, tl, br, tr];
+                        checkWinningLines();
+                    }
                 });
             });
         });
 
-        // Бутон за връщане назад
+        function checkWinningLines() {
+            console.log("Проверка за печеливши линии...");
+        }
+
         document.getElementById('btnBack').addEventListener('click', () => {
             window.location.href = 'index.html';
         });
 
-        // Анимация при зареждане на арената
         gsap.from('.arena-container', { duration: 0.6, scale: 0.8, opacity: 0, ease: 'power2.out' });
     </script>
 </body>
