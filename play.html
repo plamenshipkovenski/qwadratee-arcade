@@ -67,7 +67,7 @@
             opacity: 0.9;
         }
 
-        /* Игрална Арена (2x2 квадранта, които образуват мрежа 4x4 за топчетата) */
+        /* Игрална Арена */
         .arena-container {
             position: relative;
             width: 340px;
@@ -75,7 +75,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 8px; /* Еднакво разстояние между квадрантите */
+            gap: 8px;
             padding: 12px;
             background: rgba(15, 23, 42, 0.9);
             border-radius: 24px;
@@ -83,7 +83,6 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        /* Квадрантите носят самите топчета и се въртят заедно */
         .quadrant {
             background: var(--card-bg);
             border-radius: 14px;
@@ -92,10 +91,11 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 8px; /* Абсолютно същото разстояние, гарантиращо перфектна решетка без овърлап */
+            gap: 8px;
             padding: 10px;
             transition: border-color 0.2s, background 0.2s;
             position: relative;
+            transform-origin: center center; /* Гарантира въртене точно около центъра */
         }
 
         .quadrant:hover {
@@ -103,7 +103,7 @@
             background: rgba(30, 41, 59, 0.45);
         }
 
-        /* Топчета - намалени с 1/3, перфектно центрирани и без риск от опиране */
+        /* Топчета - Синхронизирани стилни цветове */
         .ball {
             width: 82%;
             height: 82%;
@@ -112,14 +112,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.4), 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.6), 0 3px 8px rgba(0,0,0,0.4);
         }
 
-        /* Цветове на топчетата */
-        .ball-red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a); }
-        .ball-blue { background: radial-gradient(circle at 30% 30%, #4dabf7, #1864ab); }
-        .ball-green { background: radial-gradient(circle at 30% 30%, #51cf66, #2b8a3e); }
-        .ball-yellow { background: radial-gradient(circle at 30% 30%, #fcc419, #e67700); }
+        .ball-magenta { background: radial-gradient(circle at 30% 30%, #ff2a6d, #990033); }   /* 40% */
+        .ball-indigo  { background: radial-gradient(circle at 30% 30%, #05d9e8, #005f73); }   /* 30% */
+        .ball-gold    { background: radial-gradient(circle at 30% 30%, #ffbe0b, #fb5607); }   /* 30% */
 
         /* Долен панел */
         .game-footer {
@@ -177,11 +175,20 @@
         document.getElementById('displayName').textContent = localStorage.getItem('quadratee_name') || 'Играч';
         document.getElementById('displayAvatar').textContent = localStorage.getItem('quadratee_avatar') || '🐸';
 
+        // Генериране на цветове по триадичната схема с тежести: Магента (40%), Синьо (30%), Златно (30%)
+        function getRandomColorClass() {
+            const rand = Math.random() * 100;
+            if (rand < 40) return 'ball-magenta';   // 40% тежест
+            if (rand < 70) return 'ball-indigo';    // 30% тежест
+            return 'ball-gold';                     // 30% тежест
+        }
+
+        // Инициализиране на 4-те квадранта с новите цветове
         let boardState = [
-            ['ball-red', 'ball-blue', 'ball-green', 'ball-yellow'],  
-            ['ball-yellow', 'ball-green', 'ball-blue', 'ball-red'],  
-            ['ball-blue', 'ball-red', 'ball-yellow', 'ball-green'],  
-            ['ball-green', 'ball-yellow', 'ball-red', 'ball-blue']   
+            [getRandomColorClass(), getRandomColorClass(), getRandomColorClass(), getRandomColorClass()],
+            [getRandomColorClass(), getRandomColorClass(), getRandomColorClass(), getRandomColorClass()],
+            [getRandomColorClass(), getRandomColorClass(), getRandomColorClass(), getRandomColorClass()],
+            [getRandomColorClass(), getRandomColorClass(), getRandomColorClass(), getRandomColorClass()]
         ];
 
         const quadElements = document.querySelectorAll('.quadrant');
@@ -199,30 +206,32 @@
 
         renderBoard();
 
+        // GSAP Радио-въртене (предотвратяващо прескачане при бързо кликане)
         quadElements.forEach(quad => {
             let currentRotation = 0;
 
             quad.addEventListener('click', () => {
                 const qIndex = parseInt(quad.dataset.quadIndex);
+                
+                // Променяме матрицата веднага
+                const [tl, tr, bl, br] = boardState[qIndex];
+                boardState[qIndex] = [bl, tl, br, tr];
+
+                // Натрупваме градусите за GSAP
                 currentRotation += 90;
 
                 gsap.to(quad, {
                     rotation: currentRotation,
-                    duration: 0.4,
-                    ease: "back.out(1.7)",
+                    duration: 0.35,
+                    ease: "back.out(1.5)",
                     overwrite: "auto",
-                    onComplete: () => {
-                        const [tl, tr, bl, br] = boardState[qIndex];
-                        boardState[qIndex] = [bl, tl, br, tr];
-                        checkWinningLines();
+                    onStart: () => {
+                        // Прерисуваме докато започва анимацията, за да е сигурно разпределението
+                        renderBoard();
                     }
                 });
             });
         });
-
-        function checkWinningLines() {
-            console.log("Проверка за печеливши линии...");
-        }
 
         document.getElementById('btnBack').addEventListener('click', () => {
             window.location.href = 'index.html';
