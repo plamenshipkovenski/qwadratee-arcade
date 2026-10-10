@@ -3,295 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadratee - Начало</title>
+    <title>WEBQUADRATEE - Меню</title>
+    <!-- GSAP за плавни преходи -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        body {
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            background-color: #0f172a;
-            font-family: Arial, sans-serif;
-            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            padding: 20px;
         }
 
-        .game-container {
+        .menu-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
             width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            box-sizing: border-box;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        /* Аватари */
+        .avatar-picker {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .avatar-btn {
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
             text-align: center;
         }
 
-        .home-arcade-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100vh;
-            box-sizing: border-box;
+        .avatar-btn.selected {
+            border-color: var(--accent-color);
+            background: rgba(56, 189, 248, 0.15);
+            transform: scale(1.05);
         }
 
-        .home-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* Инпут за Име */
+        input[type="text"] {
             width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Палитри */
+        .palette-picker {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .palette-btn {
+            height: 40px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            overflow: hidden;
+            padding: 3px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .palette-btn.selected {
+            border-color: var(--accent-color);
+        }
+
+        .palette-color {
+            flex: 1;
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        /* Бутони Режими */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             margin-top: 10px;
         }
 
-        .home-avatar-btn, .settings-gear-btn {
-            background: #1e293b;
-            border: 1px solid #334155;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            color: #38bdf8;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-
-        .arcade-card {
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 25px 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .bonus-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #38bdf8;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 15px;
-            color: #38bdf8;
-        }
-
-        .bonus-text {
-            font-size: 11px;
-            color: #38bdf8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: rgba(56, 189, 248, 0.1);
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-
-        .arcade-divider-text {
-            font-size: 11px;
-            color: #94a3b8;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
-
-        .arcade-code-boxes {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            width: 100%;
-            max-width: 280px;
-            margin: 0 auto;
-        }
-
-        .code-box-input {
-            width: 50px;
-            height: 50px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            color: #38bdf8;
-            font-size: 22px;
-            font-weight: bold;
-            text-align: center;
-            box-sizing: border-box;
-            transition: all 0.2s;
-        }
-
-        .code-box-input:focus {
-            border-color: #38bdf8;
-            outline: none;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
-            background: #1e293b;
-        }
-
-        .primary-arcade-btn {
-            display: block;
-            width: 100%;
-            max-width: 280px;
-            background: #0ea5e9;
-            color: #ffffff;
+        .btn {
             padding: 14px;
             border-radius: 12px;
-            font-weight: bold;
-            text-decoration: none;
-            text-align: center;
-            box-sizing: border-box;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-            cursor: pointer;
             border: none;
-            transition: background 0.2s;
-            margin: 0 auto;
-        }
-
-        .primary-arcade-btn:hover {
-            background: #0284c7;
-        }
-
-        .arcade-footer {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .arcade-logo-text {
-            font-size: 22px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 1px;
-        }
-
-        .arcade-author-text {
-            font-size: 11px;
-            color: #38bdf8;
-            letter-spacing: 0.5px;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: #1e293b; padding: 25px; border-radius: 16px;
-            text-align: center; color: #ffffff;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            max-width: 320px; width: 100%; border: 1px solid #334155;
-        }
-
-        .modal-content h3 { margin-bottom: 15px; color: #38bdf8; font-size: 16px; }
-
-        .close-btn {
-            float: right; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 15px;
-        }
-        .close-btn:hover { color: #ffffff; }
-
-        .language-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .lang-option-btn {
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: #ffffff;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            text-align: left;
-            padding-left: 20px;
-            font-size: 15px;
-            transition: all 0.2s;
-        }
-
-        .lang-option-btn:hover {
-            background: #334155;
-            border-color: #38bdf8;
-            color: #38bdf8;
-        }
-
-        .scanner-viewfinder {
-            width: 100%;
-            height: 180px;
-            background: #0f172a;
-            border: 2px dashed #38bdf8;
-            border-radius: 12px;
+            transition: transform 0.1s ease, background-color 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
-            margin-top: 15px;
-            font-size: 14px;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #0f172a;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Мултиплейър Секция */
+        .multiplayer-box {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .code-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-input-group input {
+            text-align: center;
+            letter-spacing: 4px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="game-container home-arcade-screen">
-        <header class="home-header">
-            <div class="home-avatar-btn" title="Профил">🤖</div>
-            <button id="lang-settings-btn" class="settings-gear-btn" title="Настройки на езика">⚙️</button>
-        </header>
 
-        <div class="arcade-card">
-            <div class="diamonds-badge bonus-badge">
-                💎 150 <span class="bonus-text">Daily Bonus</span>
-            </div>
+    <div class="menu-card" id="menuCard">
+        <h1 class="title">QUADRATEE</h1>
 
-            <div class="arcade-divider-text">ВЗЕМИ ОЩЕ ДИАМАНТИ</div>
-
-            <div class="arcade-code-boxes">
-                <input type="text" maxlength="1" class="code-box-input" data-index="0" />
-                <input type="text" maxlength="1" class="code-box-input" data-index="1" />
-                <input type="text" maxlength="1" class="code-box-input" data-index="2" />
-                <input type="text" maxlength="1" class="code-box-input" data-index="3" />
-            </div>
-
-            <button id="qr-scan-btn" class="arcade-btn primary-arcade-btn">ВЗЕМИ QR КОД</button>
-        </div>
-
-        <footer class="arcade-footer">
-            <div class="arcade-logo-text">quadratee</div>
-            <div class="arcade-author-text">by 10012</div>
-        </footer>
-    </div>
-
-    <div id="lang-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span id="close-lang" class="close-btn">&times;</span>
-            <h3>Изберете език / Select Language</h3>
-            <div class="language-options">
-                <button class="lang-option-btn" data-lang="en">🇬🇧 English</button>
-                <button class="lang-option-btn" data-lang="de">🇩🇪 Deutsch</button>
-                <button class="lang-option-btn" data-lang="fr">🇫🇷 Français</button>
-                <button class="lang-option-btn" data-lang="it">🇮🇹 Italiano</button>
+        <!-- Избор на Аватар -->
+        <div>
+            <div class="section-title">Избери аватар</div>
+            <div class="avatar-picker" id="avatarPicker">
+                <button class="avatar-btn selected" data-avatar="🐸">🐸</button>
+                <button class="avatar-btn" data-avatar="🦊">🦊</button>
+                <button class="avatar-btn" data-avatar="🤖">🤖</button>
+                <button class="avatar-btn" data-avatar="👾">👾</button>
+                <button class="avatar-btn" data-avatar="🚀">🚀</button>
             </div>
         </div>
-    </div>
 
-    <div id="qr-scanner-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span id="close-scanner" class="close-btn">&times;</span>
-            <h3>Сканиране на QR код</h3>
-            <div class="scanner-viewfinder">
-                📷 Камерата е активна...<br>Насочете към QR кода
+        <!-- Поле за Име -->
+        <div>
+            <div class="section-title">Име на играч</div>
+            <input type="text" id="playerName" placeholder="Въведи име..." maxlength="12">
+        </div>
+
+        <!-- Избор на Цветова Палитра -->
+        <div>
+            <div class="section-title">Тема / Палитра</div>
+            <div class="palette-picker" id="palettePicker">
+                <button class="palette-btn selected" data-theme="neon">
+                    <span class="palette-color" style="background: #38bdf8;"></span>
+                    <span class="palette-color" style="background: #f43f5e;"></span>
+                    <span class="palette-color" style="background: #a855f7;"></span>
+                </button>
+                <button class="palette-btn" data-theme="cyber">
+                    <span class="palette-color" style="background: #22c55e;"></span>
+                    <span class="palette-color" style="background: #eab308;"></span>
+                    <span class="palette-color" style="background: #ec4899;"></span>
+                </button>
+                <button class="palette-btn" data-theme="sunset">
+                    <span class="palette-color" style="background: #f97316;"></span>
+                    <span class="palette-color" style="background: #06b6d4;"></span>
+                    <span class="palette-color" style="background: #8b5cf6;"></span>
+                </button>
             </div>
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">Свързване към играта на друг потребител</p>
+        </div>
+
+        <!-- Режими на Игра -->
+        <div class="actions">
+            <button class="btn btn-primary" id="btnSolo">🎮 СОЛО АРКАДА</button>
+            <button class="btn btn-secondary" id="btnMultiToggle">👥 МУЛТИПЛЕЙЪР ДУЕЛ</button>
+
+            <!-- Разгъващ се панел за Мултиплейър -->
+            <div class="multiplayer-box" id="multiBox">
+                <button class="btn btn-primary" id="btnCreateRoom" style="width:100%;">⚡ Създай стая</button>
+                <div class="code-input-group">
+                    <input type="text" id="roomCode" placeholder="4-цифрен код" maxlength="4">
+                    <button class="btn btn-secondary" id="btnJoinRoom">Влез</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="home-script.js"></script>
+    <script>
+        let state = {
+            avatar: localStorage.getItem('quadratee_avatar') || '🐸',
+            name: localStorage.getItem('quadratee_name') || 'Играч 1',
+            theme: localStorage.getItem('quadratee_theme') || 'neon'
+        };
+
+        document.getElementById('playerName').value = state.name;
+
+        const avatarBtns = document.querySelectorAll('.avatar-btn');
+        avatarBtns.forEach(btn => {
+            if (btn.dataset.avatar === state.avatar) {
+                avatarBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            }
+            btn.addEventListener('click', () => {
+                avatarBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                state.avatar = btn.dataset.avatar;
+                localStorage.setItem('quadratee_avatar', state.avatar);
+            });
+        });
+
+        const paletteBtns = document.querySelectorAll('.palette-btn');
+        paletteBtns.forEach(btn => {
+            if (btn.dataset.theme === state.theme) {
+                paletteBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            }
+            btn.addEventListener('click', () => {
+                paletteBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                state.theme = btn.dataset.theme;
+                localStorage.setItem('quadratee_theme', state.theme);
+            });
+        });
+
+        const nameInput = document.getElementById('playerName');
+        nameInput.addEventListener('input', (e) => {
+            state.name = e.target.value || 'Играч 1';
+            localStorage.setItem('quadratee_name', state.name);
+        });
+
+        const multiBox = document.getElementById('multiBox');
+        document.getElementById('btnMultiToggle').addEventListener('click', () => {
+            const isHidden = multiBox.style.display === 'none' || !multiBox.style.display;
+            multiBox.style.display = isHidden ? 'flex' : 'none';
+        });
+
+        document.getElementById('btnSolo').addEventListener('click', () => {
+            window.location.href = 'play.html?mode=solo';
+        });
+
+        document.getElementById('btnCreateRoom').addEventListener('click', () => {
+            const generatedCode = Math.floor(1000 + Math.random() * 9000);
+            window.location.href = `play.html?mode=multi&role=host&room=${generatedCode}`;
+        });
+
+        document.getElementById('btnJoinRoom').addEventListener('click', () => {
+            const code = document.getElementById('roomCode').value.trim();
+            if (code.length === 4) {
+                window.location.href = `play.html?mode=multi&role=guest&room=${code}`;
+            } else {
+                alert('Моля въведете валиден 4-цифрен код!');
+            }
+        });
+
+        gsap.from('#menuCard', { duration: 0.6, y: 30, opacity: 0, ease: 'power2.out' });
+    </script>
 </body>
 </html>
